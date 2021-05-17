@@ -1,5 +1,4 @@
 from scapy.all import sniff
-from scapy.all import sendp
 from scapy.all import bridge_and_sniff
 
 from netaddr import IPNetwork
