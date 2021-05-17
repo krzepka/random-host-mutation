@@ -7,18 +7,18 @@ vIP_to_rIP = {}
 rIP_to_vIP = {}
 
 def save_mapping(rIP, vIP):
-    rIP_to_vIP(rIP) = vIP
-    vIP_to_rIP(vIP) = rIP
+    rIP_to_vIP[rIP] = vIP
+    vIP_to_rIP[vIP] = rIP
 
 def get_rIP(ip):
-    if vIP_to_rIP(ip)
-        return vIP_to_rIP(ip)
+    if vIP_to_rIP[ip]
+        return vIP_to_rIP[ip]
     else
         return None
 
 def get_vIP(ip):
-    if rIP_to_vIP(ip)
-        return rIP_to_vIP(ip)
+    if rIP_to_vIP[ip]
+        return rIP_to_vIP[ip]
     else
         vIP = generate_vIP(ip)
         save_mapping(ip,  vIP)
