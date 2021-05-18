@@ -17,7 +17,7 @@ shared_key = os.environ["SHARED_KEY"]
 default_host_space_requirement = 1
 default_host_mutation_interval = 10
 
-hosts = []
+hosts = [3]
 host_space_requirement = {3: 2}  # minimal number of addresses for host
 host_mutation_interval = {}  # mutation interval
 
@@ -28,7 +28,6 @@ assigned_ranges = {3: []}  # assigned VAR's
 max_var_count = 5
 min_var_count = 2
 
-mt_hosts = {}
 
 
 def get_available_addresses():
@@ -43,7 +42,7 @@ def calculate_var_size(rIP, available_addresses):
                                                             0))))
 
 
-def assign_new_addres(rIP):
+def assign_new_address_range(rIP):
     available_addresses = get_available_addresses()
     range_size = calculate_var_size(rIP, available_addresses)
     if len(available_addresses) < range_size:
@@ -65,12 +64,14 @@ def get_host_address_range(rIP):
     if assigned_ranges[rIP]:
         return assigned_ranges[rIP]
     else:
-        return assign_new_addres(rIP)
+        return assign_new_address_range(rIP)
 
 
 def low_frequency_mutation():
-    # TODO: detailed LFM
-    assigned_ranges = {}  # temporary
+    for host_ip in hosts:
+        # TODO: r_j must be divided into p separate sub-VARs proportional to the V_i requirement for each MT host
+        # TODO: to avoid address collision within a VAR, participating MT hosts will be eventually allocated non-overlapping ranges within the shared VAR
+        assign_new_address_range(rIP=host_ip)
 
 
 def add_host(rIP, space_requirement=default_host_space_requirement, mutation_interval=default_host_mutation_interval):
