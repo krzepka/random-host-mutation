@@ -3,6 +3,36 @@ from scapy.all import bridge_and_sniff
 vIP_to_rIP = {}
 rIP_to_vIP = {}
 
+shared_key = None
+mutation_speeds = {}
+
+def get_shared_key():
+    # TODO: retrieve shared_key from MTC
+    return "asdf"
+
+
+def authorize_packet(pkt):
+    # TODO: send packet to MTC, it should accept or reject that packet
+    return True
+
+
+def get_mutation_index(rIP):
+    # TODO: retrieve mutation_index from MTC for host h_i
+    return 1
+
+
+def get_available_addresses(rIP):
+    # TODO: retrieve VAR from MTC for host h_i
+    return ['192.168.1.2', '192.168.1.3', '192.168.1.4', '192.168.1.5']
+
+
+async def generate_vIP(rIP):
+    available_addresses = await get_available_addresses(rIP)
+    mutation_index = await get_mutation_index(rIP)
+    new_vIP = available_addresses[get_numeric_hash(shared_key, mutation_index) % len(available_addresses) + 1]
+    save_mapping(rIP, new_vIP)
+    return new_vIP
+
 
 def save_mapping(rIP, vIP):
     rIP_to_vIP[rIP] = vIP
@@ -20,24 +50,12 @@ def get_vIP(ip):
     if rIP_to_vIP[ip]:
         return rIP_to_vIP[ip]
     else:
-        vIP = generate_vIP(ip)
-        save_mapping(ip, vIP)
-        return vIP
-
-
-def generate_vIP(rIP):
-    # TODO
-    return vIP
-
-
-def authorize_packet(pkt):
-    # TODO: send packet to MTC, it should accept or reject that packet
-    return True
+        return generate_vIP(ip)
 
 
 def encode_packet(pkt):
-    if !session_is_active(pkt):
-        if !authorize_packet(pkt):
+    if not session_is_active(pkt):
+        if not authorize_packet(pkt):
             return False
 
     new_pkt = pkt.copy()
@@ -56,6 +74,7 @@ def decode_packet(pkt):
 
 
 def main():
+    shared_key = get_shared_key()
     bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=decode_packet, xfrm21=encode_packet)
 
 
