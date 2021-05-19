@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 from scapy.all import sniff
 from dotenv import load_dotenv
@@ -14,9 +15,7 @@ def flatten_list_of_lists(list_of_lists):
     return [element for lst in list_of_lists for element in lst]
 
 
-def handle_packet(pkt):
-    schedule.run_pending()
-    # TODO: handle packets from MTG's
+
 
 
 class MTC:
@@ -110,6 +109,30 @@ class MTC:
         self.host_space_requirement[rIP] = space_requirement
         self.host_mutation_interval[rIP] = mutation_interval
 
+    def handle_shared_key_request(self):
+        # TODO: implement
+        pass
+
+    def handle_authorization_request(self):
+        # TODO: implement
+        pass
+
+    def handle_mutation_index_request(self):
+        # TODO: implement
+        pass
+
+    def handle_virtual_address_ranges_request(self):
+        # TODO: implement
+        pass
+
+    def handle_packet(self, pkt):
+        schedule.run_pending()
+
+        # TODO: unpack messages and invoke appropriate method
+        if pkt:
+            self.handle_authorization_request()
+
+
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
@@ -120,15 +143,23 @@ def main():
     mtc = MTC(shared_key=shrd_key,
               LFM_interval=lfm_interval)
 
+    # example
     mtc.get_host_address_range(3)
     mtc.get_host_address_range(3)
     mtc.get_host_address_range(3)
     mtc.low_frequency_mutation()
     mtc.get_host_address_range(3)
+    # end of example
 
+    # TODO: create HTTP server
+    # TODO: use mtc.handle_packet method to handle http requests
 
-    # schedule.every(LFM_interval).seconds.do(low_frequency_mutation)
-    # sniff(iface="eth0", prn=handle_packet)
+    schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
+    while True:
+        time.sleep(1)
+        logging.debug("sleepin")
+        schedule.run_pending()
+
 
 
 if __name__ == "__main__":
