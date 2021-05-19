@@ -74,6 +74,8 @@ class MTC:
 
         new_range = random.sample(flattened_available_addresses, range_size)
         self.assigned_ranges[rIP] = new_range
+
+        logging.debug(f"Assigned new VAR: {new_range}, for rIP: {rIP}")
         return new_range
 
     def raise_incorrect_assigned_range_access(self, rIP):
@@ -83,18 +85,21 @@ class MTC:
     def get_host_address_range(self, rIP):
         self.raise_incorrect_assigned_range_access(rIP)
 
-        if self.assigned_ranges[rIP]:
-            return self.assigned_ranges[rIP]
-        else:
-            return self.assign_new_address_range(rIP)
+        if not self.assigned_ranges[rIP]:
+            self.assign_new_address_range(rIP)
+
+        logging.debug(f"Returning VAR for rIP {rIP}: {self.assigned_ranges[rIP]}")
+        return self.assigned_ranges[rIP]
 
     def low_frequency_mutation(self):
+        logging.debug("LFM invoked")
         temp_assigned_addresses = {}
         for host_ip in self.hosts:
-            unused_addresses = self.get_unused_addresses()
+            # unused_addresses = self.get_unused_addresses()
             # TODO: r_j must be divided into p separate sub-VARs proportional to the V_i requirement for each MT host
             # TODO: to avoid address collision within a VAR, participating MT hosts will be eventually allocated non-overlapping ranges within the shared VAR
-            var = self.get_host_address_range(rIP=host_ip)
+            # var = self.get_host_address_range(rIP=host_ip)
+            self.assign_new_address_range(rIP=host_ip)
 
     def add_host(self, rIP, space_requirement=None, mutation_interval=None):
         if space_requirement is None:
@@ -107,7 +112,7 @@ class MTC:
 
 
 def main():
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
 
     load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
     lfm_interval = int(os.environ["LFM_INTERVAL"])  # in seconds
@@ -115,8 +120,12 @@ def main():
     mtc = MTC(shared_key=shrd_key,
               LFM_interval=lfm_interval)
 
-    var = mtc.get_host_address_range(3)
-    print(var)
+    mtc.get_host_address_range(3)
+    mtc.get_host_address_range(3)
+    mtc.get_host_address_range(3)
+    mtc.low_frequency_mutation()
+    mtc.get_host_address_range(3)
+
 
     # schedule.every(LFM_interval).seconds.do(low_frequency_mutation)
     # sniff(iface="eth0", prn=handle_packet)
