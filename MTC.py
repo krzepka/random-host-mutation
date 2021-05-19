@@ -29,25 +29,50 @@ max_var_count = 5
 min_var_count = 2
 
 
+def mask_addresses_out(used_addresses):
+    # create sets of contiguous addresses by masking used addresses out from the address space
+    address_set = []
+    counter = -1
+    previous_address_added_to_set = False
+    for address in address_space:
+        if address not in used_addresses:
+            if previous_address_added_to_set is False:
+                address_set.append([])
+                counter += 1
+            address_set[counter].append(address)
+            previous_address_added_to_set = True
+        else:
+            previous_address_added_to_set = False
+
+    return address_set
+
+
 def get_unused_addresses():
     used_addresses = list(assigned_addresses.values()) + reduce(lambda x, y: x + y, assigned_ranges.values(), [])
-    return [address for address in address_space if address not in used_addresses]
+    return mask_addresses_out(used_addresses)
+    # return [address for address in address_space if address not in used_addresses]
+
+
+def flatten_list_of_lists(list_of_lists):
+    return [element for l in list_of_lists for element in l]
 
 
 def calculate_var_size(rIP, available_addresses):
+    available_addresses_count = len(flatten_list_of_lists(available_addresses))
     return min(host_space_requirement[rIP],
-               int((len(available_addresses) / 2) * (
+               int((available_addresses_count / 2) * (
                        host_space_requirement[rIP] / reduce(lambda x, y: x + y, host_space_requirement.values(),
                                                             0))))
 
 
 def assign_new_address_range(rIP):
     available_addresses = get_unused_addresses()
+    flattened_available_addresses = flatten_list_of_lists(available_addresses)
     range_size = calculate_var_size(rIP, available_addresses)
-    if len(available_addresses) < range_size:
+    if len(flattened_available_addresses) < range_size:
         raise Exception("Address space too small")
 
-    new_range = random.sample(available_addresses, range_size)
+    new_range = random.sample(flattened_available_addresses, range_size)
     assigned_ranges[rIP] = new_range
     return new_range
 
@@ -67,10 +92,12 @@ def get_host_address_range(rIP):
 
 
 def low_frequency_mutation():
+    temp_assigned_addresses = {}
     for host_ip in hosts:
+        unused_addresses = get_unused_addresses()
         # TODO: r_j must be divided into p separate sub-VARs proportional to the V_i requirement for each MT host
         # TODO: to avoid address collision within a VAR, participating MT hosts will be eventually allocated non-overlapping ranges within the shared VAR
-        assign_new_address_range(rIP=host_ip)
+        var = get_host_address_range(rIP=host_ip)
 
 
 def add_host(rIP, space_requirement=default_host_space_requirement, mutation_interval=default_host_mutation_interval):
