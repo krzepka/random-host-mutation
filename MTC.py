@@ -29,8 +29,7 @@ max_var_count = 5
 min_var_count = 2
 
 
-
-def get_available_addresses():
+def get_unused_addresses():
     used_addresses = list(assigned_addresses.values()) + reduce(lambda x, y: x + y, assigned_ranges.values(), [])
     return [address for address in address_space if address not in used_addresses]
 
@@ -43,7 +42,7 @@ def calculate_var_size(rIP, available_addresses):
 
 
 def assign_new_address_range(rIP):
-    available_addresses = get_available_addresses()
+    available_addresses = get_unused_addresses()
     range_size = calculate_var_size(rIP, available_addresses)
     if len(available_addresses) < range_size:
         raise Exception("Address space too small")
