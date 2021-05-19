@@ -7,10 +7,11 @@ from functools import reduce
 from os.path import dirname, join
 
 import schedule
+import logging
 
 
 def flatten_list_of_lists(list_of_lists):
-    return [element for l in list_of_lists for element in l]
+    return [element for lst in list_of_lists for element in lst]
 
 
 def handle_packet(pkt):
@@ -25,6 +26,7 @@ class MTC:
         self.LFM_interval = LFM_interval
         self.default_host_space_requirement = default_host_space_requirement
         self.default_host_mutation_interval = default_host_mutation_interval
+
         self.hosts = [3]
         self.host_space_requirement = {3: 2}  # minimal number of addresses for host
         self.host_mutation_interval = {}  # mutation interval
@@ -105,6 +107,8 @@ class MTC:
 
 
 def main():
+    logging.basicConfig()
+
     load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
     lfm_interval = int(os.environ["LFM_INTERVAL"])  # in seconds
     shrd_key = os.environ["SHARED_KEY"]
