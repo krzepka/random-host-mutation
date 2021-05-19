@@ -11,11 +11,35 @@ import schedule
 import logging
 
 
+"""
+Example:
+
+MThost1 -------- MTG1 -------|
+                            |
+                            ---- switch ----- MTG --------
+                            |
+MThost2 -------- MTG2 -------|
+
+
+
+address space: (2, 254)
+
+1)
+    select first VARs for the two MT hosts: (2, 3, 6), (17, 18,19)
+2)
+    them send to MTG1, MTG2
+3)
+    MTG1 selects 3 for MThost1
+    MTG2 selects 18 for MThost2
+4)
+    invoke LFM algorithm
+    (2, 254) - ((3, 18) + (2, 3, 6) + (17, 18, 19))
+    result = (2, 4, 5,...)
+"""
+
+
 def flatten_list_of_lists(list_of_lists):
     return [element for lst in list_of_lists for element in lst]
-
-
-
 
 
 class MTC:
@@ -51,6 +75,7 @@ class MTC:
         return address_set
 
     def get_unused_addresses(self):
+
         used_addresses = list(self.assigned_addresses.values()) + reduce(lambda x, y: x + y,
                                                                          self.assigned_ranges.values(), [])
         return self.mask_addresses_out(used_addresses)
@@ -95,8 +120,6 @@ class MTC:
         temp_assigned_addresses = {}
         for host_ip in self.hosts:
             # unused_addresses = self.get_unused_addresses()
-            # TODO: r_j must be divided into p separate sub-VARs proportional to the V_i requirement for each MT host
-            # TODO: to avoid address collision within a VAR, participating MT hosts will be eventually allocated non-overlapping ranges within the shared VAR
             # var = self.get_host_address_range(rIP=host_ip)
             self.assign_new_address_range(rIP=host_ip)
 
@@ -133,7 +156,6 @@ class MTC:
             self.handle_authorization_request()
 
 
-
 def main():
     logging.basicConfig(level=logging.DEBUG)
 
@@ -151,15 +173,12 @@ def main():
     mtc.get_host_address_range(3)
     # end of example
 
-    # TODO: create HTTP server
-    # TODO: use mtc.handle_packet method to handle http requests
 
     schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
     while True:
         time.sleep(1)
         logging.debug("sleepin")
         schedule.run_pending()
-
 
 
 if __name__ == "__main__":
