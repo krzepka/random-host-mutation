@@ -117,11 +117,9 @@ class MTC:
 
     def low_frequency_mutation(self):
         logging.debug("LFM invoked")
-        temp_assigned_addresses = {}
         for host_ip in self.hosts:
-            # unused_addresses = self.get_unused_addresses()
-            # var = self.get_host_address_range(rIP=host_ip)
             self.assign_new_address_range(rIP=host_ip)
+            # TODO: LFM constraints
 
     def add_host(self, rIP, space_requirement=None, mutation_interval=None):
         if space_requirement is None:
