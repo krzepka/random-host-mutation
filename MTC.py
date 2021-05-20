@@ -83,7 +83,7 @@ class MTC:
 
     def calculate_var_size(self, rIP, available_addresses):
         available_addresses_count = len(flatten_list_of_lists(available_addresses))
-        return min(self.host_space_requirement[rIP],
+        return max(self.host_space_requirement[rIP],
                    int((available_addresses_count / 2) * (
                            self.host_space_requirement[rIP] / reduce(lambda x, y: x + y,
                                                                      self.host_space_requirement.values(),
