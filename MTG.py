@@ -1,4 +1,5 @@
 from scapy.all import bridge_and_sniff
+import hashlib
 
 
 class MTC:
@@ -26,7 +27,11 @@ class MTC:
         return ['192.168.1.2', '192.168.1.3', '192.168.1.4', '192.168.1.5']
 
     def get_numeric_hash(self, index):
-        return 0
+        """
+        https://stackoverflow.com/questions/16008670/how-to-hash-a-string-into-8-digits
+        """
+        string = self.shared_key + str(index)
+        return int(hashlib.sha256(string.encode('utf-8')).hexdigest(), 16) % 10**8
 
     async def generate_vIP(self, rIP):
         available_addresses = await self.get_available_addresses(rIP)
