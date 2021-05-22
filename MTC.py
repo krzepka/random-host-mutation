@@ -10,7 +10,6 @@ from os.path import dirname, join
 import schedule
 import logging
 
-
 """
 Example:
 
@@ -170,7 +169,6 @@ def main():
     mtc.low_frequency_mutation()
     mtc.get_host_address_range(3)
     # end of example
-
 
     schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
     while True:
