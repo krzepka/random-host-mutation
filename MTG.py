@@ -2,7 +2,7 @@ from scapy.all import bridge_and_sniff
 import hashlib
 
 
-class MTC:
+class MTG:
     def __init__(self):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
@@ -33,6 +33,9 @@ class MTC:
         string = self.shared_key + str(index)
         return int(hashlib.sha256(string.encode('utf-8')).hexdigest(), 16) % 10**8
 
+    def is_session_active(self, pkt):
+        return True
+
     async def generate_vIP(self, rIP):
         available_addresses = await self.get_available_addresses(rIP)
         mutation_index = await self.get_mutation_index(rIP)
@@ -62,7 +65,7 @@ class MTC:
         return True
 
     def encode_packet(self, pkt):
-        if not self.session_is_active(pkt):
+        if not self.is_session_active(pkt):
             if not self.authorize_packet(pkt):
                 return False
 
@@ -85,7 +88,7 @@ class MTC:
 
 
 def main():
-    mtg = MTC()
+    mtg = MTG()
     mtg.run()
 
 
