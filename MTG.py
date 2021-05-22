@@ -1,14 +1,23 @@
-from scapy.all import bridge_and_sniff
+from scapy.all import *
 import hashlib
+
+from scapy.layers.l2 import ARP, Ether
 
 
 class MTG:
-    def __init__(self):
+    def __init__(self, mtc_ip="192.168.1.12"):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
 
         self.shared_key = None
         self.mutation_speeds = {}
+        self.mtc_ip = ""
+        self.mtc_mac = ""
+
+    def update_mtc_mac(self):
+        answered, unanswered = srp(Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=self.mtc_ip), verbose=0, timeout=3)
+        msg = answered[0]
+        self.mtc_mac = msg  # TODO
 
     def get_shared_key(self):
         # TODO: retrieve shared_key from MTC
@@ -31,7 +40,7 @@ class MTG:
         https://stackoverflow.com/questions/16008670/how-to-hash-a-string-into-8-digits
         """
         string = self.shared_key + str(index)
-        return int(hashlib.sha256(string.encode('utf-8')).hexdigest(), 16) % 10**8
+        return int(hashlib.sha256(string.encode('utf-8')).hexdigest(), 16) % 10 ** 8
 
     def is_session_active(self, pkt):
         return True
