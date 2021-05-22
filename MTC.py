@@ -3,12 +3,15 @@ import random
 import time
 
 from scapy.all import sniff
+from scapy.layers.http import *
 from dotenv import load_dotenv
 from functools import reduce
 from os.path import dirname, join
 
 import schedule
 import logging
+
+from scapy.sessions import TCPSession
 
 """
 Example:
@@ -129,52 +132,43 @@ class MTC:
         self.host_space_requirement[rIP] = space_requirement
         self.host_mutation_interval[rIP] = mutation_interval
 
-    def handle_shared_key_request(self):
+    def handle_shared_key_request(self, pkt):
         # TODO: implement
         pass
 
-    def handle_authorization_request(self):
+    def handle_authorization_request(self, pkt):
         # TODO: implement
         pass
 
-    def handle_mutation_index_request(self):
+    def handle_mutation_index_request(self, pkt):
         # TODO: implement
         pass
 
-    def handle_virtual_address_ranges_request(self):
+    def handle_virtual_address_ranges_request(self, pkt):
         # TODO: implement
+        pass
+
+    def handle_http_request(self, pkt):
         pass
 
     def handle_packet(self, pkt):
+        pkt.summary()
         schedule.run_pending()
 
-        # TODO: unpack messages and invoke appropriate method
         if pkt:
-            self.handle_authorization_request()
+            self.handle_http_request(pkt)
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-
     load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
     lfm_interval = int(os.environ["LFM_INTERVAL"])  # in seconds
     shrd_key = os.environ["SHARED_KEY"]
-    mtc = MTC(shared_key=shrd_key,
-              LFM_interval=lfm_interval)
 
-    # example
-    mtc.get_host_address_range(3)
-    mtc.get_host_address_range(3)
-    mtc.get_host_address_range(3)
-    mtc.low_frequency_mutation()
-    mtc.get_host_address_range(3)
-    # end of example
+    mtc = MTC(shared_key=shrd_key, LFM_interval=lfm_interval)
 
     schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
-    while True:
-        time.sleep(1)
-        logging.debug("sleepin")
-        schedule.run_pending()
+    sniff(session=TCPSession, iface="Ethernet", prn=mtc.handle_packet)
 
 
 if __name__ == "__main__":
