@@ -1,6 +1,8 @@
 import os
 import random
 import time
+import logging
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from scapy.all import sniff
 from scapy.layers.http import *
@@ -10,8 +12,6 @@ from os.path import dirname, join
 
 import schedule
 import logging
-
-from scapy.sessions import TCPSession
 
 """
 Example:
@@ -159,16 +159,48 @@ class MTC:
             self.handle_http_request(pkt)
 
 
+class MTCRequestHandler(BaseHTTPRequestHandler):
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_GET(self):
+        logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+        self._set_response()
+        self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
+
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
+                     str(self.path), str(self.headers), post_data.decode('utf-8'))
+
+        self._set_response()
+        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+
+
+def run_http_server(server_class=HTTPServer, ip='', port=8080, handler_class=MTCRequestHandler):
+    server_address = (ip, port)
+    httpd = server_class(server_address, handler_class)
+    logging.info('Starting MTG HTTP server\n')
+
+    httpd.serve_forever()
+    httpd.server_close()
+    logging.info('Stopping MTG HTTP server\n')
+
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
     lfm_interval = int(os.environ["LFM_INTERVAL"])  # in seconds
     shrd_key = os.environ["SHARED_KEY"]
 
-    mtc = MTC(shared_key=shrd_key, LFM_interval=lfm_interval)
+    # mtc = MTC(shared_key=shrd_key, LFM_interval=lfm_interval)
+    # schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
+    # sniff(session=TCPSession, iface="Ethernet", prn=mtc.handle_packet)
 
-    schedule.every(lfm_interval).seconds.do(mtc.low_frequency_mutation)
-    sniff(session=TCPSession, iface="Ethernet", prn=mtc.handle_packet)
+    run_http_server(ip='0.0.0.0')
 
 
 if __name__ == "__main__":
