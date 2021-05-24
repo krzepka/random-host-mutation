@@ -59,7 +59,7 @@ class MTC:
         self.default_host_mutation_interval = default_host_mutation_interval
 
         self.hosts = []
-        self.host_space_requirement = {3: 2}  # minimal number of addresses for host
+        self.host_space_requirement = {}  # minimal number of addresses for host
         self.host_mutation_interval = {}  # mutation interval
         self.address_space = IPSet(IPRange('192.168.1.2', '192.168.1.254'))
         self.assigned_addresses = {}  # active sessions, starting with single rIP=192.168.1.3
@@ -135,7 +135,7 @@ class MTC:
         now = time.time()
         if abs(int(self.last_LFM_timestamp - now)) > 2 * self.LFM_interval:
             lfm_job = schedule.get_jobs('LFM')
-            schedule.cancel(lfm_job)
+            schedule.clear(lfm_job)
             self.low_frequency_mutation()
             self.init_LFM_schedule()
         else:
