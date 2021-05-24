@@ -7,3 +7,4 @@ RUN apt install python python3-pip vim -y
 RUN python3 -m pip install scapy~=2.4.5
 RUN python3 -m pip install python-dotenv~=0.17.1
 RUN python3 -m pip install schedule~=1.1.0
+RUN python3 -m pip install requests~=2.25.1
