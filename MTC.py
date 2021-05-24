@@ -124,26 +124,26 @@ class MTC:
             logging.debug("assigning new address range for host: " + str(rIP))
             self.assign_new_address_range(rIP)
 
-        return self.assigned_ranges[rIP]
+        return self.assigned_ranges[str(rIP)]
 
     def low_frequency_mutation(self):
         logging.debug("LFM invoked")
-        self.mutation_index += 1
-        for host_ip in self.hosts:
-            self.assign_new_address_range(rIP=host_ip)
-            # TODO: LFM constraints
+        self.assigned_ranges = {}
+        self.last_LFM_timestamp = time.time()
 
     def handle_time_check(self):
         now = time.time()
-        if int(self.last_LFM_timestamp - now) > 2 * self.LFM_interval:
-            schedule.cancel_all()
+        if abs(int(self.last_LFM_timestamp - now)) > 2 * self.LFM_interval:
+            lfm_job = schedule.get_jobs('LFM')
+            schedule.cancel(lfm_job)
+            self.low_frequency_mutation()
             self.init_LFM_schedule()
         else:
             schedule.run_pending()
 
     def init_LFM_schedule(self):
         self.mutation_index = 0
-        schedule.every(self.LFM_interval).seconds.do(self.low_frequency_mutation)
+        schedule.every(self.LFM_interval).seconds.do(self.low_frequency_mutation).tag('LFM')
 
     def add_host(self, rIP, space_requirement=None, mutation_interval=None):
         if space_requirement is None:
