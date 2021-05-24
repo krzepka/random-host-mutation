@@ -9,3 +9,4 @@ RUN python3 -m pip install python-dotenv~=0.17.1
 RUN python3 -m pip install schedule~=1.1.0
 RUN python3 -m pip install netaddr~=0.8.0
 RUN python3 -m pip install requests~=2.25.1
+RUN git clone https://github.com/krzepka/random-host-mutation.git /home/
