@@ -1,17 +1,25 @@
+import logging
+import requests
+import socketserver
+
 from scapy.all import *
 import hashlib
 
+from scapy.layers.http import http_request
 from scapy.layers.l2 import ARP, Ether
 
 
 class MTG:
-    def __init__(self, mtc_ip="192.168.1.12"):
+    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12"):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
 
+        self.iface1 = iface1
+        self.iface2 = iface2
+
         self.shared_key = None
         self.mutation_speeds = {}
-        self.mtc_ip = ""
+        self.mtc_ip = mtc_ip
         self.mtc_mac = ""
 
     def update_mtc_mac(self):
@@ -91,14 +99,21 @@ class MTG:
         new_pkt.dst = self.get_rIP(new_pkt.dst)
         return new_pkt if (new_pkt.dst and new_pkt.src) else False
 
+    def send_http(self):
+        payload = {'test': 'AAAAAAA', 'test2': 'BBBBB'}
+        r = requests.post('http://192.168.1.9:8080', data=payload)
+        print(r.text)
+
     def run(self):
         self.shared_key = self.get_shared_key()
         bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=self.decode_packet, xfrm21=self.encode_packet)
 
 
+
 def main():
+    logging.basicConfig(level=logging.INFO)
     mtg = MTG()
-    mtg.run()
+    mtg.send_http()
 
 
 if __name__ == "__main__":
