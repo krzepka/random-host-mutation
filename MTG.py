@@ -12,7 +12,7 @@ from CommunicationUtilities import RequestCommand
 
 
 class MTG:
-    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port = 8080):
+    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port=8080):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
 
@@ -31,16 +31,16 @@ class MTG:
         self.mtc_mac = msg  # TODO
 
     def get_shared_key(self):
-        payload = {'command', RequestCommand.key.value}
-        key = self.send_recv_http(payload=payload).text
-        return key
+        payload = {'type': RequestCommand.key.value}
+        key = self.send_recv_http(payload=payload)
+        return key.text
 
     def authorize_packet(self, pkt):
         # TODO: send packet to MTC, it should accept or reject that packet
         return True
 
     def get_mutation_index(self, rIP):
-        payload = {'command', RequestCommand.mutation_index.value}
+        payload = {'type': RequestCommand.mutation_index.value}
         index = self.send_recv_http(payload=payload).text
         try:
             index = int(index)
@@ -116,12 +116,10 @@ class MTG:
         bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=self.decode_packet, xfrm21=self.encode_packet)
 
 
-
 def main():
     logging.basicConfig(level=logging.INFO)
     mtg = MTG(mtc_ip='127.0.0.1')
-    re  = mtg.send_recv_http({'type': 'm_index'})
-    print(re.text)
+    print(mtg.get_shared_key())
 
 
 if __name__ == "__main__":
