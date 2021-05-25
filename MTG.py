@@ -1,3 +1,4 @@
+import json
 import logging
 import requests
 import socketserver
@@ -49,8 +50,9 @@ class MTG:
         return index
 
     def get_available_addresses(self, rIP):
-        # TODO: retrieve VAR from MTC for host h_i
-        return ['192.168.1.2', '192.168.1.3', '192.168.1.4', '192.168.1.5']
+        payload = {'type': RequestCommand.var.value, 'rIP': rIP}
+        response = self.send_recv_http(payload=payload).text
+        return json.loads(response)
 
     def get_numeric_hash(self, index):
         """
@@ -119,7 +121,9 @@ class MTG:
 def main():
     logging.basicConfig(level=logging.INFO)
     mtg = MTG(mtc_ip='127.0.0.1')
-    print(mtg.get_shared_key())
+    # print(mtg.get_shared_key())
+    # print(mtg.get_mutation_index(False))
+    print(mtg.get_available_addresses('192.168.1.2'))
 
 
 if __name__ == "__main__":
