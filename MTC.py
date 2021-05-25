@@ -3,6 +3,7 @@ import random
 import time
 import logging
 import json
+import math
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 from netaddr import *
@@ -51,20 +52,20 @@ def addresses_to_string(ip_set):
 
 class MTC:
     def __init__(self, shared_key, LFM_interval=900, default_host_space_requirement=1,
-                 default_host_mutation_interval=10):
+                 default_host_HFM_interval=10):
         self.shared_key = shared_key
         self.LFM_interval = LFM_interval
         self.last_LFM_timestamp = time.time()
         self.default_host_space_requirement = default_host_space_requirement
-        self.default_host_mutation_interval = default_host_mutation_interval
+        self.default_host_HFM_interval = default_host_HFM_interval
 
         self.hosts = []
         self.host_space_requirement = {}  # minimal number of addresses for host
-        self.host_mutation_interval = {}  # mutation interval
+        self.host_HFM_interval = {}  # mutation interval
         self.address_space = IPSet(IPRange('192.168.1.2', '192.168.1.254'))
-        self.assigned_addresses = {}  # active sessions, starting with single rIP=192.168.1.3
+        self.active_sessions = {}  # active sessions, starting with single rIP=192.168.1.3
         self.assigned_ranges = {}  # assigned VAR's
-        self.mutation_index = 0
+        self.mutation_indexes = {}
         self.init_LFM_schedule()
 
         self.add_host('192.168.1.2')
@@ -89,7 +90,7 @@ class MTC:
 
     def get_unused_addresses(self):
 
-        used_addresses = list(self.assigned_addresses.values()) + reduce(lambda x, y: x + y,
+        used_addresses = list(self.active_sessions.keys()) + reduce(lambda x, y: x + y,
                                                                          self.assigned_ranges.values(), [])
         return self.mask_addresses_out(used_addresses)
         # return [address for address in address_space if address not in used_addresses]
@@ -117,9 +118,6 @@ class MTC:
         return new_range
 
     def get_host_address_range(self, rIP):
-        if rIP not in self.hosts:
-            raise Exception(f"Host does not exist: {rIP}")
-
         if rIP not in self.assigned_ranges.keys():
             logging.debug("assigning new address range for host: " + str(rIP))
             self.assign_new_address_range(rIP)
@@ -142,27 +140,31 @@ class MTC:
             schedule.run_pending()
 
     def init_LFM_schedule(self):
-        self.mutation_index = 0
+        self.mutation_indexes = {}
         schedule.every(self.LFM_interval).seconds.do(self.low_frequency_mutation).tag('LFM')
 
     def add_host(self, rIP, space_requirement=None, mutation_interval=None):
         if space_requirement is None:
             space_requirement = self.default_host_space_requirement
         if mutation_interval is None:
-            mutation_interval = self.default_host_mutation_interval
+            mutation_interval = self.default_host_HFM_interval
         self.hosts.append(rIP)
         self.host_space_requirement[rIP] = space_requirement
-        self.host_mutation_interval[rIP] = mutation_interval
+        self.host_HFM_interval[rIP] = mutation_interval
 
     def handle_shared_key_request(self):
-        return str(self.shared_key)
+        return json.dumps(self.shared_key)
 
-    def handle_authorization_request(self, data):
-        # TODO: implement
-        pass
+    def handle_host_authorize_request(self, rIP):
+        # TODO
+        return json.dumps(True)
+        
 
-    def handle_mutation_index_request(self):
-        return str(self.mutation_index)
+    def handle_mutation_index_request(self, rIP):            
+        HFM_interval = self.host_HFM_interval[rIP]
+        now = time.time()
+        result = math.floor((now - self.last_LFM_timestamp) / HFM_interval)
+        return json.dumps(result)
 
     def handle_virtual_address_ranges_request(self, rIP):
         var = self.get_host_address_range(rIP)
@@ -182,6 +184,7 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
             'key': mtc.handle_shared_key_request,
             'm_index': mtc.handle_mutation_index_request,
             'var': mtc.handle_virtual_address_ranges_request,
+            'auth': mtc.handle_host_authorize_request
         }
         super().__init__(*args)
 
@@ -198,19 +201,30 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
             key: value[0] for key, value in query.items()
         }
         r_args = []
-        if request['type'] == 'var':
+        if 'type' not in request.keys() or request['type'] not in self.map_type_to_GET_request.keys():
+            self.send_error(400, message="Wrong request type")
+            return
+
+        if request['type'] in ['var', 'm_index', 'auth']:
+            if 'rIP' not in request.keys():
+                self.send_error(400, message="Missing rIP parameter")
+                return
+
+            if request['rIP'] not in mtc.hosts:
+                self.send_error(400, message="Unknown host: {}".format(request['rIP']))
+                return
+
             r_args.append(request['rIP'])
-        if request['type'] in self.map_type_to_GET_request.keys():
-            try:
-                response = self.map_type_to_GET_request[request['type']](*r_args)
-                self._set_response()
-                self.wfile.write(response.encode('utf-8'))
-                return
-            except Exception as inst:
-                self.send_error(400, message=str(inst))
-                return
         
-        self.send_error(400, message="Wrong request type")
+        try:
+            response = self.map_type_to_GET_request[request['type']](*r_args)
+            self._set_response()
+            self.wfile.write(response.encode('utf-8'))
+            return
+        except Exception as inst:
+            self.send_error(400, message=str(inst))
+            return
+        
 
     def do_POST(self):
         mtc.handle_time_check()
