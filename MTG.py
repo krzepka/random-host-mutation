@@ -8,9 +8,11 @@ import hashlib
 from scapy.layers.http import http_request
 from scapy.layers.l2 import ARP, Ether
 
+from CommunicationUtilities import RequestCommand
+
 
 class MTG:
-    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12"):
+    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port = 8080):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
 
@@ -20,6 +22,7 @@ class MTG:
         self.shared_key = None
         self.mutation_speeds = {}
         self.mtc_ip = mtc_ip
+        self.mtc_port = mtc_port
         self.mtc_mac = ""
 
     def update_mtc_mac(self):
@@ -28,16 +31,22 @@ class MTG:
         self.mtc_mac = msg  # TODO
 
     def get_shared_key(self):
-        # TODO: retrieve shared_key from MTC
-        return "asdf"
+        payload = {'command', RequestCommand.key.value}
+        key = self.send_recv_http(payload=payload).text
+        return key
 
     def authorize_packet(self, pkt):
         # TODO: send packet to MTC, it should accept or reject that packet
         return True
 
     def get_mutation_index(self, rIP):
-        # TODO: retrieve mutation_index from MTC for host h_i
-        return 1
+        payload = {'command', RequestCommand.mutation_index.value}
+        index = self.send_recv_http(payload=payload).text
+        try:
+            index = int(index)
+        except Exception:
+            raise Exception(f"Received from the MTC an incorrect mutation index: {index}")
+        return index
 
     def get_available_addresses(self, rIP):
         # TODO: retrieve VAR from MTC for host h_i
@@ -99,10 +108,8 @@ class MTG:
         new_pkt.dst = self.get_rIP(new_pkt.dst)
         return new_pkt if (new_pkt.dst and new_pkt.src) else False
 
-    def send_http(self):
-        payload = {'test': 'AAAAAAA', 'test2': 'BBBBB'}
-        r = requests.post('http://192.168.1.9:8080', data=payload)
-        print(r.text)
+    def send_recv_http(self, payload):
+        return requests.get(f'http://{self.mtc_ip}:{self.mtc_port}', params=payload)
 
     def run(self):
         self.shared_key = self.get_shared_key()
@@ -112,8 +119,9 @@ class MTG:
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    mtg = MTG()
-    mtg.send_http()
+    mtg = MTG(mtc_ip='127.0.0.1')
+    re  = mtg.send_recv_http({'type': 'm_index'})
+    print(re.text)
 
 
 if __name__ == "__main__":

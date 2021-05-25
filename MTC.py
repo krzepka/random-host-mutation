@@ -16,6 +16,8 @@ from os.path import dirname, join
 import schedule
 import logging
 
+from CommunicationUtilities import RequestCommand
+
 """
 Example:
 
@@ -46,8 +48,10 @@ address space: (2, 254)
 def flatten_list_of_lists(list_of_lists):
     return [element for lst in list_of_lists for element in lst]
 
+
 def addresses_to_string(ip_set):
     return [str(addr) for addr in ip_set]
+
 
 class MTC:
     def __init__(self, shared_key, LFM_interval=900, default_host_space_requirement=1,
@@ -168,6 +172,7 @@ class MTC:
         var = self.get_host_address_range(rIP)
         return json.dumps(addresses_to_string(var))
 
+
 logging.basicConfig(level=logging.DEBUG)
 load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
 
@@ -176,12 +181,13 @@ shrd_key = os.environ["SHARED_KEY"]
 
 mtc = MTC(shared_key=shrd_key, LFM_interval=lfm_interval)
 
+
 class MTCRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, *args):
         self.map_type_to_GET_request = {
-            'key': mtc.handle_shared_key_request,
-            'm_index': mtc.handle_mutation_index_request,
-            'var': mtc.handle_virtual_address_ranges_request,
+            RequestCommand.key.value: mtc.handle_shared_key_request,
+            RequestCommand.mutation_index.value: mtc.handle_mutation_index_request,
+            RequestCommand.var.value: mtc.handle_virtual_address_ranges_request,
         }
         super().__init__(*args)
 
@@ -193,7 +199,7 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         mtc.handle_time_check()
         query = parse_qs(urlparse(self.path).query)
-        logging.info("POST request,\nrequestParams: %s", query)
+        logging.info("GET request,\nrequestParams: %s", query)
         request = {
             key: value[0] for key, value in query.items()
         }
@@ -209,7 +215,7 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
             except Exception as inst:
                 self.send_error(400, message=str(inst))
                 return
-        
+
         self.send_error(400, message="Wrong request type")
 
     def do_POST(self):
@@ -237,7 +243,6 @@ def run_http_server(server_class=HTTPServer,
 
 
 def main():
-
     run_http_server(ip='127.0.0.1')
 
 
