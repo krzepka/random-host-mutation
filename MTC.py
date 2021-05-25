@@ -47,8 +47,10 @@ address space: (2, 254)
 def flatten_list_of_lists(list_of_lists):
     return [element for lst in list_of_lists for element in lst]
 
+
 def addresses_to_string(ip_set):
     return [str(addr) for addr in ip_set]
+
 
 class MTC:
     def __init__(self, shared_key, LFM_interval=900, default_host_space_requirement=1,
@@ -91,7 +93,7 @@ class MTC:
     def get_unused_addresses(self):
 
         used_addresses = list(self.active_sessions.keys()) + reduce(lambda x, y: x + y,
-                                                                         self.assigned_ranges.values(), [])
+                                                                    self.assigned_ranges.values(), [])
         return self.mask_addresses_out(used_addresses)
         # return [address for address in address_space if address not in used_addresses]
 
@@ -158,9 +160,8 @@ class MTC:
     def handle_host_authorize_request(self, rIP):
         # TODO
         return json.dumps(True)
-        
 
-    def handle_mutation_index_request(self, rIP):            
+    def handle_mutation_index_request(self, rIP):
         HFM_interval = self.host_HFM_interval[rIP]
         now = time.time()
         result = math.floor((now - self.last_LFM_timestamp) / HFM_interval)
@@ -170,6 +171,7 @@ class MTC:
         var = self.get_host_address_range(rIP)
         return json.dumps(addresses_to_string(var))
 
+
 logging.basicConfig(level=logging.DEBUG)
 load_dotenv(dotenv_path=join(dirname(__file__), ".env"))
 
@@ -177,6 +179,7 @@ lfm_interval = int(os.environ["LFM_INTERVAL"])  # in seconds
 shrd_key = os.environ["SHARED_KEY"]
 
 mtc = MTC(shared_key=shrd_key, LFM_interval=lfm_interval)
+
 
 class MTCRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, *args):
@@ -196,7 +199,7 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         mtc.handle_time_check()
         query = parse_qs(urlparse(self.path).query)
-        logging.info("POST request,\nrequestParams: %s", query)
+        logging.info("GET request,\nrequestParams: %s", query)
         request = {
             key: value[0] for key, value in query.items()
         }
@@ -215,7 +218,7 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
                 return
 
             r_args.append(request['rIP'])
-        
+
         try:
             response = self.map_type_to_GET_request[request['type']](*r_args)
             self._set_response()
@@ -224,7 +227,6 @@ class MTCRequestHandler(BaseHTTPRequestHandler):
         except Exception as inst:
             self.send_error(400, message=str(inst))
             return
-        
 
     def do_POST(self):
         mtc.handle_time_check()
@@ -251,7 +253,6 @@ def run_http_server(server_class=HTTPServer,
 
 
 def main():
-
     run_http_server(ip='127.0.0.1')
 
 
