@@ -158,6 +158,9 @@ class MTC:
         return json.dumps(self.shared_key)
 
     def handle_host_authorize_request(self, rIP):
+        # performed once per session that includes rIP as destination
+        # MTC access control policy can bemanaged by administrators based on the criticality of the MT host
+        # ^ store list of "admin" rIPs that are authorized to reach MT host by rIPs?
         # TODO
         return json.dumps(True)
 
