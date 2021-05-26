@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from functools import reduce
 from os.path import dirname, join
 
-import schedule
 import logging
 
 """
@@ -68,7 +67,6 @@ class MTC:
         self.active_sessions = {}  # active sessions, starting with single rIP=192.168.1.3
         self.assigned_ranges = {}  # assigned VAR's
         self.mutation_indexes = {}
-        self.init_LFM_schedule()
 
         self.add_host('192.168.1.2')
         self.add_host('192.168.1.3')
@@ -129,21 +127,12 @@ class MTC:
     def low_frequency_mutation(self):
         logging.debug("LFM invoked")
         self.assigned_ranges = {}
-        self.last_LFM_timestamp = time.time()
 
     def handle_time_check(self):
         now = time.time()
-        if abs(int(self.last_LFM_timestamp - now)) > 2 * self.LFM_interval:
-            lfm_job = schedule.get_jobs('LFM')
-            schedule.clear(lfm_job)
+        if now - self.last_LFM_timestamp > self.LFM_interval:
+            self.last_LFM_timestamp = now
             self.low_frequency_mutation()
-            self.init_LFM_schedule()
-        else:
-            schedule.run_pending()
-
-    def init_LFM_schedule(self):
-        self.mutation_indexes = {}
-        schedule.every(self.LFM_interval).seconds.do(self.low_frequency_mutation).tag('LFM')
 
     def add_host(self, rIP, space_requirement=None, mutation_interval=None):
         if space_requirement is None:
@@ -158,6 +147,7 @@ class MTC:
         return json.dumps(self.shared_key)
 
     def handle_host_authorize_request(self, rIP):
+        # MTHost rIP ->   rIP MThost
         # performed once per session that includes rIP as destination
         # MTC access control policy can bemanaged by administrators based on the criticality of the MT host
         # ^ store list of "admin" rIPs that are authorized to reach MT host by rIPs?
