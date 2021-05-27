@@ -109,7 +109,7 @@ class MTG:
             logging.debug(f"[encode] Not a source host MTG: modifying source IP")
             new_pkt[IP].src = self.get_vIP(new_pkt[IP].src)
 
-        logging.debug(f"[encode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
+        logging.debug(f"[encode] Sending a new packet from {new_pkt[IP].src} to {new_pkt[IP].dst}")
         return new_pkt
 
     def decode_packet(self, pkt):
@@ -123,13 +123,14 @@ class MTG:
         if self.is_source_host():
             logging.debug(f"[decode] MTG is a source host: modifying dst IP")
             if new_pkt[IP].dst in self.vIP_to_rIP:
-                logging.debug(f"[decode] IP {new_pkt[IP].dst} is present in vIP-rIP mapping")
-                new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
+                new_ip = self.get_rIP(new_pkt[IP].dst)
+                logging.debug(f"[decode] IP {new_pkt[IP].dst} is present in vIP-rIP mapping, modifying to {new_ip}")
+                new_pkt[IP].dst = new_ip
             else:
                 logging.debug(f"[decode] IP {new_pkt[IP].dst} is NOT present in vIP-rIP mapping!")
                 return False
 
-        logging.debug(f"[decode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
+        logging.debug(f"[decode] Sending a new packet from {new_pkt[IP].src} to {new_pkt[IP].dst}")
         return new_pkt if (new_pkt[IP].dst and new_pkt[IP].src) else False
 
     def send_recv_http(self, payload):
