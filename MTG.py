@@ -21,7 +21,7 @@ class MTG:
         self.iface2 = iface2
 
         self.shared_key = None
-        self.mutation_speeds = {}
+        self.mutation_speeds = {"192.168.1.13": 20}  # modify vIP every X seconds
         self.mtc_ip = mtc_ip
         self.mtc_port = mtc_port
         self.mtc_mac = ""
@@ -111,7 +111,10 @@ class MTG:
         return new_pkt if (new_pkt.dst and new_pkt.src) else False
 
     def send_recv_http(self, payload):
-        return requests.get(f'http://{self.mtc_ip}:{self.mtc_port}', params=payload)
+        logging.debug(f"Sending {payload['type']} request to MTC")
+        answer = requests.get(f'http://{self.mtc_ip}:{self.mtc_port}', params=payload)
+        logging.debug(f"From MTC received: {answer.text}")
+        return answer
 
     def run(self):
         self.shared_key = self.get_shared_key()
