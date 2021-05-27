@@ -119,14 +119,10 @@ class MTG:
 
         new_pkt = pkt.copy()
         if self.is_source_host():
-            if new_pkt[IP].src in self.rIP_to_vIP:
-                new_pkt[IP].src = self.get_rIP(new_pkt[IP].src)
+            if new_pkt[IP].dst in self.vIP_to_rIP:
+                new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
             else:
                 return False
-        if new_pkt[IP].dst in self.vIP_to_rIP:
-            new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
-        else:
-            return False
 
         logging.debug(f"[decode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
         return new_pkt if (new_pkt[IP].dst and new_pkt[IP].src) else False
