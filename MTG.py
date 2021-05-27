@@ -1,24 +1,20 @@
 import json
-import logging
 import requests
-import socketserver
-
-from scapy.all import *
 import hashlib
-
-from scapy.layers.http import http_request
+from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
 
 from CommunicationUtilities import RequestCommand
 
 
 class MTG:
-    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port=8080):
+    def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port=8080, source_host=False):
         self.vIP_to_rIP = {}
         self.rIP_to_vIP = {}
 
         self.iface1 = iface1
         self.iface2 = iface2
+        self.source_host = source_host
 
         self.shared_key = None
         self.mutation_speeds = {"192.168.1.13": 20}  # modify vIP every X seconds
@@ -89,8 +85,7 @@ class MTG:
             return self.generate_vIP(ip)
 
     def is_source_host(self):
-        # TODO
-        return True
+        return self.source_host
 
     def encode_packet(self, pkt):
         if not self.is_session_active(pkt):
@@ -123,9 +118,11 @@ class MTG:
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    mtg = MTG(mtc_ip='127.0.0.1')
-    # print(mtg.get_shared_key())
-    # print(mtg.get_mutation_index(False))
+    mtg = MTG(mtc_ip='127.0.0.1',
+              source_host=True
+              # source_host=False
+              )
+    # mtg.run()
     print(mtg.get_available_addresses('192.168.1.2'))
 
 
