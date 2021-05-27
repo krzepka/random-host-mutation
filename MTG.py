@@ -123,7 +123,7 @@ class MTG:
                 new_pkt[IP].src = self.get_rIP(new_pkt[IP].src)
             else:
                 return False
-        if new_pkt[IP].dst in self.rIP_to_vIP:
+        if new_pkt[IP].dst in self.vIP_to_rIP:
             new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
         else:
             return False
