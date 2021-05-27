@@ -2,6 +2,7 @@ import json
 import requests
 import hashlib
 from scapy.all import *
+from scapy.layers.inet import IP
 from scapy.layers.l2 import ARP, Ether
 
 from CommunicationUtilities import RequestCommand
@@ -9,15 +10,15 @@ from CommunicationUtilities import RequestCommand
 
 class MTG:
     def __init__(self, iface1="Ethernet", iface2="eth1", mtc_ip="192.168.1.12", mtc_port=8080, source_host=False):
-        self.vIP_to_rIP = {}
-        self.rIP_to_vIP = {}
+        self.vIP_to_rIP = {"192.168.1.20": "192.168.1.2"}
+        self.rIP_to_vIP = {"192.168.1.2": "192.168.1.20"}
 
         self.iface1 = iface1
         self.iface2 = iface2
         self.source_host = source_host
 
         self.shared_key = None
-        self.mutation_speeds = {"192.168.1.13": 20}  # modify vIP every X seconds
+        self.mutation_speeds = {"192.168.1.2": 20}  # modify vIP every X seconds
         self.mtc_ip = mtc_ip
         self.mtc_port = mtc_port
         self.mtc_mac = ""
@@ -88,22 +89,47 @@ class MTG:
         return self.source_host
 
     def encode_packet(self, pkt):
+        if IP in pkt:
+            logging.debug(f"[encode] Received packet from {pkt[IP].src} to {pkt[IP].dst}")
+        else:
+            logging.debug(f"[encode] Received packet with no IP!")
+            return False
+
         if not self.is_session_active(pkt):
             if not self.authorize_packet(pkt):
                 return False
 
         new_pkt = pkt.copy()
+        if new_pkt[IP].dst not in self.rIP_to_vIP:
+            return False
+
         if self.is_source_host():
-            new_pkt.dst = self.get_vIP(new_pkt.dst)
-        new_pkt.src = self.get_vIP(new_pkt.src)
+            new_pkt[IP].dst = self.get_vIP(new_pkt[IP].dst)
+        new_pkt[IP].src = self.get_vIP(new_pkt[IP].src)
+
+        logging.debug(f"[encode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
         return new_pkt
 
     def decode_packet(self, pkt):
+        if IP in pkt:
+            logging.debug(f"[decode] Received packet from {pkt[IP].src} to {pkt[IP].dst}")
+        else:
+            logging.debug(f"[decode] Received packet with no IP!")
+            return False
+
         new_pkt = pkt.copy()
         if self.is_source_host():
-            new_pkt.src = self.get_rIP(new_pkt.src)
-        new_pkt.dst = self.get_rIP(new_pkt.dst)
-        return new_pkt if (new_pkt.dst and new_pkt.src) else False
+            if new_pkt[IP].src in self.rIP_to_vIP:
+                new_pkt[IP].src = self.get_rIP(new_pkt[IP].src)
+            else:
+                return False
+        if new_pkt[IP].dst in self.rIP_to_vIP:
+            new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
+        else:
+            return False
+
+        logging.debug(f"[decode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
+        return new_pkt if (new_pkt[IP].dst and new_pkt[IP].src) else False
 
     def send_recv_http(self, payload):
         logging.debug(f"Sending {payload['type']} request to MTC")
@@ -117,13 +143,13 @@ class MTG:
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     mtg = MTG(mtc_ip='127.0.0.1',
               source_host=True
               # source_host=False
               )
-    # mtg.run()
-    print(mtg.get_available_addresses('192.168.1.2'))
+    mtg.run()
+    # print(mtg.get_available_addresses('192.168.1.2'))
 
 
 if __name__ == "__main__":
