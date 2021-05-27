@@ -100,10 +100,12 @@ class MTG:
                 return False
 
         new_pkt = pkt.copy()
-        if new_pkt[IP].dst not in self.rIP_to_vIP:
-            return False
 
         if not self.is_source_host():
+            if new_pkt[IP].dst not in self.rIP_to_vIP:
+                return False
+
+            logging.debug(f"[encode] Not a source host MTG: modifying source IP")
             new_pkt[IP].src = self.get_vIP(new_pkt[IP].src)
 
         logging.debug(f"[encode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
@@ -118,6 +120,7 @@ class MTG:
 
         new_pkt = pkt.copy()
         if self.is_source_host():
+            logging.debug(f"[encode] MTG is a source host: modifying dst IP")
             if new_pkt[IP].dst in self.vIP_to_rIP:
                 new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
             else:
