@@ -102,7 +102,8 @@ class MTG:
         new_pkt = pkt.copy()
 
         if not self.is_source_host():
-            if new_pkt[IP].dst not in self.rIP_to_vIP:
+            if new_pkt[IP].src not in self.rIP_to_vIP:
+                logging.debug(f"[decode] IP {new_pkt[IP].src} is NOT present in vIP-rIP mapping!")
                 return False
 
             logging.debug(f"[encode] Not a source host MTG: modifying source IP")
@@ -120,10 +121,12 @@ class MTG:
 
         new_pkt = pkt.copy()
         if self.is_source_host():
-            logging.debug(f"[encode] MTG is a source host: modifying dst IP")
+            logging.debug(f"[decode] MTG is a source host: modifying dst IP")
             if new_pkt[IP].dst in self.vIP_to_rIP:
+                logging.debug(f"[decode] IP {new_pkt[IP].dst} is present in vIP-rIP mapping")
                 new_pkt[IP].dst = self.get_rIP(new_pkt[IP].dst)
             else:
+                logging.debug(f"[decode] IP {new_pkt[IP].dst} is NOT present in vIP-rIP mapping!")
                 return False
 
         logging.debug(f"[decode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
@@ -137,12 +140,12 @@ class MTG:
 
     def run(self):
         self.shared_key = self.get_shared_key()
-        bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=self.decode_packet, xfrm21=self.encode_packet)
+        bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=self.encode_packet, xfrm21=self.decode_packet)
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    mtg = MTG(mtc_ip='127.0.0.1',
+    mtg = MTG(mtc_ip='192.168.2.1',
               source_host=True
               # source_host=False
               )
