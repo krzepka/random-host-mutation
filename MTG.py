@@ -103,9 +103,8 @@ class MTG:
         if new_pkt[IP].dst not in self.rIP_to_vIP:
             return False
 
-        if self.is_source_host():
-            new_pkt[IP].dst = self.get_vIP(new_pkt[IP].dst)
-        new_pkt[IP].src = self.get_vIP(new_pkt[IP].src)
+        if not self.is_source_host():
+            new_pkt[IP].src = self.get_vIP(new_pkt[IP].src)
 
         logging.debug(f"[encode] Sending a new packet from {pkt[IP].src} to {pkt[IP].dst}")
         return new_pkt
