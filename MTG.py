@@ -63,7 +63,7 @@ class MTG:
 
     async def generate_vIP(self, rIP):
         available_addresses = await self.get_available_addresses(rIP)
-        mutation_index = await self.get_mutation_index(rIP)
+        mutation_index = self.get_mutation_index(rIP)
         new_vIP = available_addresses[
             self.get_numeric_hash(mutation_index) % len(available_addresses) + 1]
         self.save_mapping(rIP, new_vIP)
@@ -135,7 +135,7 @@ class MTG:
 
     def send_recv_http(self, payload):
         logging.debug("Sending " + payload['type'] + " request to MTC")
-        answer = requests.get('http://' + self.mtc_ip + ":" + self.mtc_port, params=payload)
+        answer = requests.get('http://' + self.mtc_ip + ":" + str(self.mtc_port), params=payload)
         logging.debug("From MTC received: " +answer.text)
         return answer
 
