@@ -1,0 +1,40 @@
+W GNS3VM:
+
+git clone https://github.com/AJNOURI/Quagga_docker_gns3
+docker build -t quagga ./Quagga_docker_gns3
+
+W GNS3 Apce:
+
+Edit->Preferences->Docker->Docker containers->New->quagga:latest->3Adaptery->reszta default
+
+Konfiguracja Quaggi:
+vi /etc/quagga/daemons
+=> na końcu ustawiamy wszystkie wpisy na "...=no" oprócz "ripd=yes" i "zebra=yes"
+=> zapisujemy
+vi /etc/quagga/ripd.conf
+=> dopisujemy:
+"
+  router rip
+    network <sieć którą chcemy rozgłosić, np 192.168.1.0/24>
+    neighbor <adres urządzenia któremu chcemy przekazywać informacje o dostępnych sieciach>
+"
+Następnie odpalamy usługę:
+/etc/init.d/quagga start
+
+
+żeby zobaczyć co się dzieje:
+vtysh 
+q
+show ip rip
+show ip rip status
+
+
+pierwsza komenda (vtysh) to odpalenie shella
+żeby w nim wpisać komendy trzeba kliknąć "q",
+nie wiem, jakoś dziwnie się porusza wewnątrz tego shella,
+możnaby zerknąć do dokumentacji czemu tak działa
+
+Btw: żeby cokolwiek się pojawiło w tablicach routingu RIP,
+to muszą być przynajmniej dwie maszynki odpalone które będą ze sobą gadać.
+Jak jest błędnie coś pokonfigurowane to w statusie będą się pojawiać "BadPackets"
+przy adresie źródłowym
