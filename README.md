@@ -17,6 +17,7 @@ GNS3 VM setup:
 
 - connect to GNS3 VM from ssh client (connection options visible on the GNS3 VM screen)
 - git clone <this-repository-location.git>
+- cd ./random-host-mutation
 - docker build -t test/ubuntu-python .
 
 To install topology to GNS3:
