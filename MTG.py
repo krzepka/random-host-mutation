@@ -61,8 +61,8 @@ class MTG:
     def is_session_active(self, pkt):
         return True
 
-    async def generate_vIP(self, rIP):
-        available_addresses = await self.get_available_addresses(rIP)
+    def generate_vIP(self, rIP):
+        available_addresses = self.get_available_addresses(rIP)
         mutation_index = self.get_mutation_index(rIP)
         new_vIP = available_addresses[
             self.get_numeric_hash(mutation_index) % len(available_addresses) + 1]
