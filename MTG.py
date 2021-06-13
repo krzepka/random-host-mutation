@@ -129,7 +129,6 @@ class MTG:
 
         logging.debug("[encode] Sending a new packet from " + new_pkt[IP].src + " to " + new_pkt[IP].dst)
         del new_pkt[IP].chksum
-        new_pkt[IP].chksum = checksum(new_pkt[IP])
         return new_pkt
 
     def decode_packet(self, pkt):
@@ -148,7 +147,6 @@ class MTG:
                     "[decode] IP " + new_pkt[IP].dst + " is present in vIP-rIP mapping, modifying to " + new_ip)
                 new_pkt[IP].dst = new_ip
                 del new_pkt[IP].chksum
-                new_pkt[IP].chksum = checksum(new_pkt[IP])
             else:
                 logging.debug("[decode] IP " + new_pkt[IP].dst + " is NOT present in vIP-rIP mapping!")
                 return False
