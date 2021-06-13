@@ -38,7 +38,7 @@ class MTG:
         return result.hwsrc
 
     def start_quagga(self):
-        os.system('/etc/inid.d/quagga start')
+        os.system('/etc/init.d/quagga start')
 
     def get_shared_key(self):
         payload = {'type': RequestCommand.key.value}
