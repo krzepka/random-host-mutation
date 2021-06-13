@@ -16,9 +16,12 @@ GNS3 VM installation:
 GNS3 VM setup:
 
 - connect to GNS3 VM from ssh client (connection options visible on the GNS3 VM screen)
-- git clone <this-repository-location.git>
-- cd ./random-host-mutation
-- docker build -t test/ubuntu-python .
+- git clone https://github.com/AJNOURI/Quagga_docker_gns3
+- git clone https://github.com/krzepka/random-host-mutation/
+- rm ./Quagga_docker_gns3/Dockerfile
+- cp ./random-host-mutation/Dockerfile_MTG ./Quagga_docker_gns3/Dockerfile
+- docker build -t mtg /Quagga_docker_gns3
+- docker build -t mtc /random-host-mutation
 
 To install topology to GNS3:
 
@@ -31,13 +34,24 @@ To install topology to GNS3:
   - Docker -> Docker containers
     - create new
     - run on GNS3 VM
-    - existing image: test/ubuntu-python
-    - write <machine-name> as container name (May be MTC/MTG)
-    - enable 2 network adapters
+    - existing image: mtg:latest
+    - write "MTG" as container name
+    - enable 3 network adapters
+    - the rest is default
+  - Docker -> Docker containers
+    - create new
+    - run on GNS3 VM
+    - existing image: mtc:latest
+    - write "MTC" as container name
+    - enable 1 network adapters
     - the rest is default
 
-Note: If you want, you can differentiate MTC from MTG by creating a second identical container with different name and 1 network adapter for MTC, 2 network adapters for MTG.
-
 Network configuration:
-<TODO: insert image with network configuration>
-<TODO: add scripts for each machine: EndHost, MTG, MTC, VyOS-Router>
+
+- add machines to GNS3 according to ./topology.png
+- each machine has its network configuration in ./configs folder, apply them to machines' configs respectively
+- each MTG machine requires RIP configuration, execute respective scripts from ./rip_configs folder to setup the machines
+
+Run:
+MTG_1: python3 home.run_mtg.py
+MTG_2: python3 home.run_mtg.py --source_host
