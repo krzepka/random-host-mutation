@@ -73,4 +73,5 @@ RUN python3 -m pip install netaddr~=0.8.0
 RUN python3 -m pip install vymgmt
 RUN python3 -m pip install pyeapi
 RUN python3 -m pip install requests~=2.25.1
+ARG CACHEBUST=1
 RUN git clone https://github.com/krzepka/random-host-mutation.git /home/
