@@ -1,0 +1,6 @@
+FROM ubuntu:18.04
+RUN apt update && apt install libpcap-dev iputils-ping net-tools iproute2 ssh -y
+RUN apt install nmap -y
+RUN apt install vlan -y
+RUN apt install python python3-pip vim -y
+RUN apt install git -y
