@@ -15,7 +15,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     mtg = MTG(iface1="eth0",
               iface2="eth1",
               mtc_ip='192.168.4.5',

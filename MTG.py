@@ -46,7 +46,7 @@ class MTG:
         return key.text
 
     def get_mutation_index(self, rIP):
-        payload = {'type': RequestCommand.mutation_index.value}
+        payload = {'type': RequestCommand.mutation_index.value, 'rIP': rIP}
         index = self.send_recv_http(payload=payload).text
         try:
             index = int(index)
@@ -117,7 +117,6 @@ class MTG:
         if not self.is_session_active(pkt):
             pass
 
-        pkt.show()
         new_pkt = pkt.copy()
 
         if not self.is_source_host():
@@ -130,7 +129,7 @@ class MTG:
 
         logging.debug("[encode] Sending a new packet from " + new_pkt[IP].src + " to " + new_pkt[IP].dst)
         del new_pkt[IP].chksum
-        new_pkt[IP].show2()
+        new_pkt[IP].chksum = checksum(new_pkt[IP])
         return new_pkt
 
     def decode_packet(self, pkt):
@@ -149,7 +148,7 @@ class MTG:
                     "[decode] IP " + new_pkt[IP].dst + " is present in vIP-rIP mapping, modifying to " + new_ip)
                 new_pkt[IP].dst = new_ip
                 del new_pkt[IP].chksum
-                new_pkt[IP].show2()
+                new_pkt[IP].chksum = checksum(new_pkt[IP])
             else:
                 logging.debug("[decode] IP " + new_pkt[IP].dst + " is NOT present in vIP-rIP mapping!")
                 return False
@@ -158,7 +157,6 @@ class MTG:
 
         if new_pkt[IP].dst and new_pkt[IP].src:
             logging.debug("[decode] Sending a new packet from " + new_pkt[IP].src + " to " + new_pkt[IP].dst)
-            new_pkt.show()
             return new_pkt
         else:
             return False
