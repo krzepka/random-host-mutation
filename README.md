@@ -20,8 +20,8 @@ GNS3 VM setup:
 - git clone https://github.com/krzepka/random-host-mutation/
 - rm ./Quagga_docker_gns3/Dockerfile
 - cp ./random-host-mutation/Dockerfile_MTG ./Quagga_docker_gns3/Dockerfile
-- docker build -t mtg /Quagga_docker_gns3
-- docker build -t mtc /random-host-mutation
+- docker build -t mtg ./Quagga_docker_gns3
+- docker build -t mtc ./random-host-mutation
 
 To install topology to GNS3:
 
@@ -50,9 +50,14 @@ Network configuration:
 
 - add machines to GNS3 according to ./topology.png
 - each machine has its network configuration in ./configs folder, apply them to machines' configs respectively
-- each MTG machine requires RIP configuration, execute respective scripts from ./rip_configs folder to setup the machines
+- each MTG machine requires RIP configuration, execute respective scripts from ./rip_configs folder to setup the machines (if you see permission denied to run scripts, use command "chmod -x home/rip_configs/setup_MTG\_<MTG-number>.txt)
+
+Setup Env variables:
+
+- create file with env variables ".env". Example can be accessed in ".env.example"
 
 Run (MTC must be run before MTG's):
-MTC: python3 home/MTC.py
-MTG_1: python3 home/run_mtg.py --adjacent_host_ip=192.168.1.1
-MTG_2: python3 home/run_mtg.py --source_host --adjacent_host_ip=192.168.3.4
+
+- MTC: python3 home/MTC.py
+- MTG_1: python3 home/run_mtg.py --adjacent_host_ip=192.168.1.1
+- MTG_2: python3 home/run_mtg.py --source_host --adjacent_host_ip=192.168.3.4
