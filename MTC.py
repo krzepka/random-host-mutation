@@ -68,8 +68,7 @@ class MTC:
         self.assigned_ranges = {}  # assigned VAR's
         self.mutation_indexes = {}
 
-        self.add_host('192.168.1.2')
-        self.add_host('192.168.1.3')
+        self.add_host('192.168.1.1')
 
     def mask_addresses_out(self, used_addresses):
         # create sets of contiguous addresses by masking used addresses out from the address space
