@@ -63,7 +63,7 @@ class MTC:
         self.hosts = []
         self.host_space_requirement = {}  # minimal number of addresses for host
         self.host_HFM_interval = {}  # mutation interval
-        self.address_space = IPSet(IPRange('192.168.1.2', '192.168.1.254'))
+        self.address_space = IPSet(IPRange('192.168.1.1', '192.168.1.254'))
         self.active_sessions = {}  # active sessions, starting with single rIP=192.168.1.3
         self.assigned_ranges = {}  # assigned VAR's
         self.mutation_indexes = {}
