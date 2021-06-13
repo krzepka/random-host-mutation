@@ -3,27 +3,28 @@ import requests
 import hashlib
 from scapy.all import *
 from scapy.layers.inet import IP
-from scapy.layers.l2 import ARP, Ether
 
 from CommunicationUtilities import RequestCommand
 
 
 class MTG:
-    def __init__(self, iface1="eth0", iface2="eth1", mtc_ip="192.168.1.12", mtc_port=8080, source_host=False):
+    def __init__(self, iface1, iface2, iface_mac_src, iface_mac_dst, mtc_ip="192.168.4.5", mtc_port=8080,
+                 source_host=False):
         self.vIP_to_rIP = {"192.168.1.20": "192.168.1.1"}
         self.rIP_to_vIP = {"192.168.1.1": "192.168.1.20"}
+        self.mutation_speeds = {"192.168.1.1": 20}  # modify vIP every X seconds
+        self.mutation_timestamps = {"192.168.1.1": time.time()}  # modify vIP every X seconds
 
         self.iface1 = iface1
         self.iface2 = iface2
         self.source_host = source_host
 
         self.shared_key = None
-        self.mutation_speeds = {"192.168.1.1": 20}  # modify vIP every X seconds
         self.mtc_ip = mtc_ip
         self.mtc_port = mtc_port
 
-        self.iface_mac_src = "32:0e:50:3d:7b:f4"
-        self.iface_mac_dst = "be:5a:31:36:3b:36"
+        self.iface_mac_src = iface_mac_src
+        self.iface_mac_dst = iface_mac_dst
 
     def get_shared_key(self):
         payload = {'type': RequestCommand.key.value}
@@ -72,7 +73,18 @@ class MTG:
         else:
             return None
 
+    def clear_mapping_after_interval(self, ip):
+        if ip in self.mutation_speeds and ip in self.mutation_timestamps:
+            current_timestamp = time.time()
+            if current_timestamp - self.mutation_timestamps[ip] > self.mutation_speeds[ip]:
+                self.rIP_to_vIP[ip] = ""
+                self.vIP_to_rIP[ip] = ""
+
+                self.mutation_timestamps[ip] = current_timestamp
+
     def get_vIP(self, ip):
+        self.clear_mapping_after_interval(ip)
+
         if self.rIP_to_vIP[ip]:
             return self.rIP_to_vIP[ip]
         else:
@@ -96,8 +108,7 @@ class MTG:
 
         if not self.is_source_host():
             if new_pkt[IP].src not in self.rIP_to_vIP:
-                logging.debug("[decode] IP " + new_pkt[IP].src + " is dNOT present in vIP-rIP mapping!")
-                logging.debug(self.rIP_to_vIP)
+                logging.debug("[decode] IP " + new_pkt[IP].src + " is NOT present in vIP-rIP mapping!")
                 return False
 
             logging.debug("[encode] Not a source host MTG: modifying source IP")
@@ -146,16 +157,19 @@ class MTG:
 
     def run(self):
         self.shared_key = self.get_shared_key()
-        bridge_and_sniff(if1="eth0", if2="eth1", xfrm12=self.encode_packet, xfrm21=self.decode_packet)
+        bridge_and_sniff(if1=self.iface1, if2=self.iface2, xfrm12=self.encode_packet, xfrm21=self.decode_packet)
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    mtg = MTG(mtc_ip='192.168.4.5',
-              source_host=True
-              )
+    mtg = MTG(iface1="eth0",
+              iface2="eth1",
+              iface_mac_src="32:0e:50:3d:7b:f4",
+              iface_mac_dst="be:5a:31:36:3b:36",
+              mtc_ip='192.168.4.5',
+              source_host=True)
+
     mtg.run()
-    # print(mtg.get_available_addresses('192.168.1.2'))
 
 
 if __name__ == "__main__":
