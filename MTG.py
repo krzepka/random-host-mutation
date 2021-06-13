@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 import hashlib
@@ -25,6 +26,9 @@ class MTG:
 
         self.iface_mac_src = iface_mac_src
         self.iface_mac_dst = iface_mac_dst
+
+    def start_quagga(self):
+        os.system('/etc/inid.d/quagga start')
 
     def get_shared_key(self):
         payload = {'type': RequestCommand.key.value}
@@ -156,6 +160,7 @@ class MTG:
         return answer
 
     def run(self):
+        self.start_quagga()
         self.shared_key = self.get_shared_key()
         bridge_and_sniff(if1=self.iface1, if2=self.iface2, xfrm12=self.encode_packet, xfrm21=self.decode_packet)
 
