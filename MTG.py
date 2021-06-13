@@ -159,18 +159,3 @@ class MTG:
         self.shared_key = self.get_shared_key()
         bridge_and_sniff(if1=self.iface1, if2=self.iface2, xfrm12=self.encode_packet, xfrm21=self.decode_packet)
 
-
-def main():
-    logging.basicConfig(level=logging.DEBUG)
-    mtg = MTG(iface1="eth0",
-              iface2="eth1",
-              iface_mac_src="32:0e:50:3d:7b:f4",
-              iface_mac_dst="be:5a:31:36:3b:36",
-              mtc_ip='192.168.4.5',
-              source_host=True)
-
-    mtg.run()
-
-
-if __name__ == "__main__":
-    main()
