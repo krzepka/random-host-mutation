@@ -34,7 +34,7 @@ class MTG:
         return get_if_hwaddr(self.iface1)
 
     def get_host_mac(self, ip):
-        result = sr1(ARP(op=ARP.who_has, psrc=get_if_addr(self.iface1), pdst=ip))
+        result = sr1(ARP(op='who-has', psrc=get_if_addr(self.iface1), pdst=ip))
         return result.hwsrc
 
     def start_quagga(self):
