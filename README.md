@@ -52,6 +52,7 @@ Network configuration:
 - each machine has its network configuration in ./configs folder, apply them to machines' configs respectively
 - each MTG machine requires RIP configuration, execute respective scripts from ./rip_configs folder to setup the machines
 
-Run:
-MTG_1: python3 home.run_mtg.py
-MTG_2: python3 home.run_mtg.py --source_host
+Run (MTC must be run before MTG's):
+MTC: python3 home/MTC.py
+MTG_1: python3 home/run_mtg.py --adjacent_host_ip=192.168.1.1
+MTG_2: python3 home/run_mtg.py --source_host --adjacent_host_ip=192.168.3.4
