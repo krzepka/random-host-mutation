@@ -246,7 +246,7 @@ def run_http_server(server_class=HTTPServer,
 
 
 def main():
-    run_http_server(ip='127.0.0.1')
+    run_http_server(ip='0.0.0.0')
 
 
 if __name__ == "__main__":

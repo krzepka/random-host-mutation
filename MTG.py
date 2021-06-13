@@ -4,12 +4,13 @@ import requests
 import hashlib
 from scapy.all import *
 from scapy.layers.inet import IP
+from scapy.layers.l2 import ARP
 
 from CommunicationUtilities import RequestCommand
 
 
 class MTG:
-    def __init__(self, iface1, iface2, iface_mac_src, iface_mac_dst, mtc_ip="192.168.4.5", mtc_port=8080,
+    def __init__(self, iface1, iface2, adjacent_host_ip, mtc_ip="192.168.4.5", mtc_port=8080,
                  source_host=False):
         self.vIP_to_rIP = {"192.168.1.20": "192.168.1.1"}
         self.rIP_to_vIP = {"192.168.1.1": "192.168.1.20"}
@@ -24,8 +25,17 @@ class MTG:
         self.mtc_ip = mtc_ip
         self.mtc_port = mtc_port
 
-        self.iface_mac_src = iface_mac_src
-        self.iface_mac_dst = iface_mac_dst
+        self.iface_mac_src = self.get_local_mac()
+        self.iface_mac_dst = self.get_host_mac(adjacent_host_ip)
+        logging.debug("Retrieved local (src) MAC: " + self.iface_mac_src)
+        logging.debug("From " + adjacent_host_ip + " retrieved remote (dst) MAC: " + self.iface_mac_dst)
+
+    def get_local_mac(self):
+        return get_if_hwaddr(self.iface1)
+
+    def get_host_mac(self, ip):
+        result = sr1(ARP(op=ARP.who_has, psrc=get_if_addr(self.iface1), pdst=ip))
+        return result.hwsrc
 
     def start_quagga(self):
         os.system('/etc/inid.d/quagga start')
@@ -163,4 +173,3 @@ class MTG:
         self.start_quagga()
         self.shared_key = self.get_shared_key()
         bridge_and_sniff(if1=self.iface1, if2=self.iface2, xfrm12=self.encode_packet, xfrm21=self.decode_packet)
-
