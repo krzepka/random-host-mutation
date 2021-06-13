@@ -7,7 +7,7 @@ from MTG import MTG
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--adjacent_host_ip', type=str, required=True)
-    parser.add_argument('--source_host', action='store_true', required=True)
+    parser.add_argument('--source_host', action='store_true', required=False)
 
     return parser.parse_args()
 
