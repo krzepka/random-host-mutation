@@ -4,3 +4,5 @@ RUN apt install nmap -y
 RUN apt install vlan -y
 RUN apt install python python3-pip vim -y
 RUN apt install git -y
+ARG CACHEBUST=1
+RUN git clone https://github.com/krzepka/random-host-mutation.git /home
